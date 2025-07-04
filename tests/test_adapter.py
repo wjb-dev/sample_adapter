@@ -5,7 +5,6 @@ from examples.sample_adapter.app.main import SampleAdapter
 from examples.sample_adapter.app.main import main as adapter_main
 
 
-
 @pytest.mark.asyncio
 async def test_adapter_lifecycle_methods(capsys):
     """
@@ -48,6 +47,7 @@ def test_duplicate_registration(orchestrator, adapter):
     """
     orchestrator.use(adapter, priority=1)
     assert list(orchestrator._registry.keys()).count(adapter.name) == 1
+
 
 @pytest.mark.asyncio
 async def test_main_function_invokes_lifecycle(capsys):

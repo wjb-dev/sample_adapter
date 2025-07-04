@@ -27,7 +27,7 @@ jobs:
           # Install the Haraka Runtime SDK
           pip install git+https://github.com/wjb-dev/haraka-runtime.git@main#egg=haraka-runtime
           # Install the sample adapter in editable mode
-          pip install -e examples/sample_adapter
+          pip install -e .
 
       - name: Lint & Format Check
         run: |

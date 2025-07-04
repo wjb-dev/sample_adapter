@@ -52,8 +52,8 @@ def test_duplicate_registration(orchestrator, adapter):
 @pytest.mark.asyncio
 async def test_main_function_invokes_lifecycle(capsys):
     """
-    Calling the module’s `main()` coroutine should start and then shut down the adapter,
-    printing both messages once each.
+    Calling the module’s `main()` coroutine should start and then shut down the
+    adapter, printing both messages once each.
     """
     # Run the main() entrypoint
     await adapter_main()

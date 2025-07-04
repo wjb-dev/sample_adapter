@@ -35,6 +35,10 @@ jobs:
           black --check .
           flake8 .
 
+      - name: Verify test discovery
+        run: |
+          pytest --collect-only tests/
+
       - name: Run tests & coverage
         run: |
           pytest tests/ \

@@ -25,7 +25,7 @@ jobs:
       - name: Install SDK & Sample Adapter
         run: |
           # Install the Haraka Runtime SDK
-          pip install -e .
+          pip install git+https://github.com/wjb-dev/haraka-runtime.git@main#egg=haraka-runtime
           # Install the sample adapter in editable mode
           pip install -e examples/sample_adapter
 

@@ -1,6 +1,7 @@
 README.md
-main.py
 pyproject.toml
+app/__init__.py
+app/main.py
 sample_adapter.egg-info/PKG-INFO
 sample_adapter.egg-info/SOURCES.txt
 sample_adapter.egg-info/dependency_links.txt

@@ -8,7 +8,7 @@ Implements the Adapter interface with no-op startup and shutdown methods.
 
 import asyncio
 
-from core.interfaces import Adapter
+from src.haraka_runtime.core.interfaces import Adapter
 
 
 class SampleAdapter(Adapter):

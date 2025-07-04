@@ -1,1 +1,1 @@
-haraka-runtime
+haraka-runtime@ git+https://github.com/wjb-dev/haraka-runtime.git@main#egg=haraka-runtime

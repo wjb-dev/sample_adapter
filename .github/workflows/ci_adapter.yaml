@@ -28,6 +28,7 @@ jobs:
           pip install git+https://github.com/wjb-dev/haraka-runtime.git@main#egg=haraka-runtime
           # Install the sample adapter in editable mode
           pip install -e .
+          pip install -r requirements-dev.txt
 
       - name: Lint & Format Check
         run: |

@@ -1,8 +1,9 @@
 import pytest
 from types import SimpleNamespace
 
-from examples.sample_adapter.app.main import SampleAdapter
-from examples.sample_adapter.app.main import main as adapter_main
+from app.main import main as adapter_main
+
+from app.main import SampleAdapter
 
 
 @pytest.mark.asyncio

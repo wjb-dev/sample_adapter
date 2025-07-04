@@ -7,6 +7,7 @@ Implements the Adapter interface with no-op startup and shutdown methods.
 """
 
 import asyncio
+
 from core.interfaces import Adapter
 
 

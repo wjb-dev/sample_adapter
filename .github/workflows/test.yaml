@@ -6,6 +6,10 @@ on:
       - Build     # This matches the "name:" field in the Build workflow (build.yaml)
     types:
       - completed
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   test:

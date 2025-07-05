@@ -5,6 +5,7 @@ on:
 env:
   SERVICE_NAME: haraka-demo
   REGISTRY_HOST: wjbdev
+  VERSION: 0.1.0
 
 jobs:
   build-and-push:

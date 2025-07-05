@@ -199,12 +199,3 @@ jobs:
           curl -s -X POST "$WEBHOOK" \
             -H "Content-Type: application/json" \
             --data "$payload"
-      - name: Send Hello World to Discord
-        run: |
-          payload=$(
-            jq -n '{content: "Hello, World from GitHub Actions!"}'
-          )
-          curl -s -H "Content-Type: application/json" \
-            --data "$payload" "$DISCORD_WEBHOOK_URL"
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}

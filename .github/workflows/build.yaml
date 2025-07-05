@@ -1,10 +1,10 @@
-name: Build
+name: Build-Test
 
 on:
   workflow_call:
 
 jobs:
-  build:
+  build-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,3 +24,22 @@ jobs:
 
       - name: Build Success
         run: echo "Build completed successfully"
+
+      - name: Lint & Format Check
+        run: |
+          black --check .
+          flake8 .
+
+      - name: Verify test discovery
+        run: |
+          pytest --collect-only tests/
+
+      - name: Run Unit Tests
+        run: |
+          pytest tests/ \
+            --maxfail=1 \
+            --disable-warnings -q \
+
+      - name: Enforce Coverage Threshold
+        run: |
+          coverage report --fail-under=80 --show-missing --skip-empty

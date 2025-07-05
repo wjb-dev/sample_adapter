@@ -1,1 +1,6 @@
 haraka[PyFast]==0.2.62
+black
+flake8
+pytest
+pytest-asyncio
+pytest-cov

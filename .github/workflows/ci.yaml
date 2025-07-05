@@ -8,13 +8,9 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build-test:
     uses: ./.github/workflows/build.yaml
 
-  test:
-    needs: build
-    uses: ./.github/workflows/test.yaml
-
   publish-docker:
-    needs: test
+    needs: build-test
     uses: ./.github/workflows/publish-docker.yaml

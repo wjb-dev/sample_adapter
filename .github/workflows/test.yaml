@@ -22,12 +22,12 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements-dev.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements-test.txt') }}
 
       - name: Install Dependencies
         run: |
           pip install -e .
-          pip install -r requirements-dev.txt
+          pip install -r requirements-test.txt
 
       - name: Lint & Format Check
         run: |

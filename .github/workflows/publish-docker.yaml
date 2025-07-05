@@ -98,7 +98,6 @@ jobs:
     env:
       KEEP_LAST_N: ${{ needs.build-and-push.outputs.keep_last_n }}
       TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-      NAMESPACE: ${{ env.DOCKERHUB_USERNAME }}
       SERVICE: ${{ env.SERVICE_NAME }}
     steps:
       - name: Install jq
@@ -107,8 +106,8 @@ jobs:
       - name: Re-fetch & sort all tags
         id: refetch
         run: |
-          curl -s -u "$NAMESPACE:$TOKEN" \
-            "https://hub.docker.com/v2/repositories/$NAMESPACE/$SERVICE/tags/?page_size=100" \
+          curl -s -u "$DOCKERHUB_USERNAME:$DOCKERHUB_TOKEN" \
+            "https://hub.docker.com/v2/repositories/$DOCKERHUB_USERNAME/$SERVICE_NAME/tags/?page_size=100" \
             | jq -r '.results[] | "\(.last_updated) \(.name)"' \
             | sort \
             | awk '{print $2}' > sorted.txt
@@ -133,7 +132,7 @@ jobs:
         run: |
           for TAG in ${{ steps.compute.outputs.to_prune }}; do
             echo "Deleting $TAG..."
-            curl -s -X DELETE -u "$NAMESPACE:$TOKEN" \
-              "https://hub.docker.com/v2/repositories/$NAMESPACE/$SERVICE/tags/$TAG/" \
+            curl -s -X DELETE -u "$DOCKERHUB_USERNAME:$DOCKERHUB_TOKEN" \
+              "https://hub.docker.com/v2/repositories/$DOCKERHUB_USERNAME/$SERVICE_NAME/tags/$TAG/" \
               || echo "⚠️ Failed to delete $TAG"
           done

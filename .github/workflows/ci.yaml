@@ -15,8 +15,7 @@ jobs:
     uses: ./.github/workflows/publish-docker.yaml
     secrets: inherit
   retention-list:
-    name:
-      Retention: List & Sort Tags
+    name: List and Sort Tags
     needs: publish                      # or whatever your publish job is called
     runs-on: ubuntu-latest
     env:

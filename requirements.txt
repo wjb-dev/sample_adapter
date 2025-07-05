@@ -1,5 +1,4 @@
-black
-flake8
 pytest
 pytest-asyncio
 pytest-cov
+haraka[PyFast]==0.2.62

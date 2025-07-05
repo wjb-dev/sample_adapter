@@ -1,5 +1,5 @@
 import pytest
-from src.haraka_runtime.orchestrator.orchestrator import Orchestrator
+from haraka_runtime.orchestrator.orchestrator import Orchestrator
 
 from app.main import SampleAdapter
 

@@ -2,7 +2,6 @@ name: Publish Docker Image
 
 on:
   workflow_call:
-
 env:
   SERVICE_NAME: haraka-demo  # Adjust this to match your service name
   REGISTRY_HOST: wjbdev
@@ -13,6 +12,7 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    environment: test
 
     steps:
       - name: Checkout Code

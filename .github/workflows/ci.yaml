@@ -2,6 +2,8 @@ name: CI Pipeline
 
 on:
   push:
+    tags:
+      - 'v*.*.*'
     branches: [ main ]
   pull_request:
     branches: [ main ]
@@ -10,11 +12,10 @@ jobs:
   build:
     uses: ./.github/workflows/build.yaml
 
-  publish-docker:
+  publish:
     needs: build
     uses: ./.github/workflows/publish-docker.yaml
-    secrets: inherit
     with:
-      version: ${{ github.ref_name }}
+      version: ${{ replace(github.ref_name, 'v', '') }}
       keep_last_n: 5
-
+    secrets: inherit

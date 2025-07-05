@@ -13,15 +13,18 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
       - name: Debug Secrets
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
-          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
+          if [ -z "${{ env.DOCKERHUB_USERNAME }}" ]; then
             echo "DOCKERHUB_USERNAME is NOT available."
             exit 1
           else
             echo "DOCKERHUB_USERNAME is available."
           fi
 
-          if [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+          if [ -z "${{ env.DOCKERHUB_TOKEN }}" ]; then
             echo "DOCKERHUB_TOKEN is NOT available."
             exit 1
           else

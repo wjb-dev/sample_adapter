@@ -7,6 +7,8 @@ env:
   SERVICE_NAME: haraka-demo  # Adjust this to match your service name
   REGISTRY_HOST: wjbdev
   VERSION: 0.1.0
+  DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
 jobs:
   build-and-push:
@@ -20,8 +22,8 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: docker.io
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
 
       - name: Extract Version from Tag
         id: extract_version

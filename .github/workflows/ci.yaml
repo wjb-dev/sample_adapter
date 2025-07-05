@@ -1,21 +1,40 @@
+# .github/workflows/ci.yaml
 name: CI Pipeline
 
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'v*.*.*'         # only run on semver tags like v1.2.3
     branches: [ main ]
   pull_request:
     branches: [ main ]
 
 jobs:
+  derive-version:
+    name: Derive Version
+    runs-on: ubuntu-latest
+    # Expose the cleaned version (no leading 'v') to other jobs
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+    steps:
+      - name: Extract version from tag
+        id: extract
+        run: |
+          # GITHUB_REF is "refs/tags/v1.2.3"
+          VER=${GITHUB_REF#refs/tags/v}
+          echo "version=$VER" >> $GITHUB_OUTPUT
+
   build:
+    name: Build
+    needs: derive-version
     uses: ./.github/workflows/build.yaml
+    # If build.yaml needs inputs or secrets, map them here
 
   publish:
-    needs: build
+    name: Publish & Retain
+    needs: [derive-version, build]
     uses: ./.github/workflows/publish-docker.yaml
     with:
-      version: ${{ replace(github.ref_name, 'v', '') }}
+      version: ${{ needs.derive-version.outputs.version }}
       keep_last_n: 5
     secrets: inherit

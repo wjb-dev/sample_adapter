@@ -13,7 +13,21 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+      - name: Debug Secrets
+        run: |
+          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
+            echo "DOCKERHUB_USERNAME is NOT available."
+            exit 1
+          else
+            echo "DOCKERHUB_USERNAME is available."
+          fi
 
+          if [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+            echo "DOCKERHUB_TOKEN is NOT available."
+            exit 1
+          else
+            echo "DOCKERHUB_TOKEN is available."
+          fi
       - name: Log in to Docker Registry
         uses: docker/login-action@v2
         with:

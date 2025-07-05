@@ -39,6 +39,7 @@ jobs:
           pytest tests/ \
             --maxfail=1 \
             --disable-warnings -q \
+            --cov=app
 
       - name: Enforce Coverage Threshold
         run: |

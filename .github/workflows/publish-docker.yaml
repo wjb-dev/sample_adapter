@@ -45,8 +45,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:${{ inputs.version }}
-            ${{ env.REGISTRY }}/${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:latest
+            ${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:${{ inputs.version }}
+            ${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:latest
 
   retention-list:
     name: Retention Policy – List & Sort Tags

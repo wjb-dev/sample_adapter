@@ -2,36 +2,98 @@ name: Publish Docker Image
 
 on:
   workflow_call:
+    inputs:
+      version:
+        description: 'Semantic version (e.g. 0.1.0)'
+        required: true
+        type: string
+      keep_last_n:
+        description: 'How many tags to keep (default=5)'
+        required: false
+        default: 5
+        type: number
+    secrets:
+      DOCKERHUB_TOKEN:
+        required: true
+
 env:
   SERVICE_NAME: haraka-demo
-  REGISTRY_HOST: wjbdev
   DOCKERHUB_USERNAME: wjbdev
-  VERSION: 0.1.0
+  REGISTRY: docker.io
 
 jobs:
   build-and-push:
+    name: Build & Push
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ inputs.version }}
+      keep_last_n: ${{ inputs.keep_last_n }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-      - name: Log in to Docker Registry
+
+      - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
-          registry: docker.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract Version from Tag
-        id: extract_version
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
-      - name: Build and Push Docker Image
+      - name: Build & Push Docker Image
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
           tags: |
-            ${{ env.REGISTRY_HOST }}/${{ env.SERVICE_NAME }}:${{ github.ref_name || env.VERSION }}
-            ${{ env.REGISTRY_HOST }}/${{ env.SERVICE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:${{ inputs.version }}
+            ${{ env.REGISTRY }}/${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:latest
+
+  retention-list:
+    name: Retention Policy – List & Sort Tags
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    env:
+      SERVICE_NAME: ${{ env.SERVICE_NAME }}
+      NAMESPACE: ${{ env.DOCKERHUB_USERNAME }}
+      KEEP_LAST_N: ${{ needs.build-and-push.outputs.keep_last_n }}
+      TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    steps:
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Fetch all tags from Docker Hub
+        id: fetch
+        run: |
+          echo "› Fetching tags for $NAMESPACE/$SERVICE_NAME"
+          # Docker Hub API v2 for listing tags
+          curl -s -u "$NAMESPACE:$TOKEN" \
+            "https://hub.docker.com/v2/repositories/$NAMESPACE/$SERVICE_NAME/tags/?page_size=100" \
+            > all-tags.json
+          echo "::set-output name=data::$(jq -c '.results' all-tags.json)"
+
+      - name: Sort tags by last_updated
+        id: sort
+        run: |
+          # each item has .name and .last_updated
+          mapfile -t sorted < <(
+            jq -r '.[] | "\(.last_updated) \(.name)"' <<<"${{ steps.fetch.outputs.data }}" \
+              | sort \
+              | awk '{print $2}'
+          )
+          echo "All tags (oldest→newest):"
+          printf " • %s\n" "${sorted[@]}"
+
+          # get the most recent KEEP_LAST_N
+          start=$(( ${#sorted[@]} - KEEP_LAST_N ))
+          if [ $start -lt 0 ]; then start=0; fi
+          recent=( "${sorted[@]:$start}" )
+          echo
+          echo "Most recent $KEEP_LAST_N tags:"
+          printf " • %s\n" "${recent[@]}"
+
+          # expose for downstream (if you wanted to delete old ones)
+          echo "::set-output name=all::${sorted[*]}"
+          echo "::set-output name=recent::${recent[*]}"
+
+      # (you could add a third job here that actually deletes 
+      # anything in all minus recent by calling the delete API)

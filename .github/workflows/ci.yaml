@@ -10,73 +10,11 @@ jobs:
   build:
     uses: ./.github/workflows/build.yaml
 
-  publish:
+  publish-docker:
     needs: build
     uses: ./.github/workflows/publish-docker.yaml
     secrets: inherit
-  retention-list:
-    name: List and Sort Tags
-    needs: publish                      # or whatever your publish job is called
-    runs-on: ubuntu-latest
-    env:
-      REGISTRY_HOST: registry.example.com
-      SERVICE_NAME: S
-      KEEP_LAST_N: ${{ inputs.KEEP_LAST_N || '5' }}
-      REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
-      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
-
-    steps:
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Authenticate to Registry
-        run: |
-          echo "${{ env.REGISTRY_PASSWORD }}" | docker login \
-            --username "${{ env.REGISTRY_USERNAME }}" \
-            --password-stdin "${{ env.REGISTRY_HOST }}"
-
-      - name: Fetch all tags
-        id: fetch
-        run: |
-          echo "› Listing tags for ${SERVICE_NAME}"
-          TAGS_JSON=$(curl -s \
-            -u "${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" \
-            "https://${REGISTRY_HOST}/v2/${SERVICE_NAME}/tags/list")
-          echo "tags=$TAGS_JSON" >> $GITHUB_OUTPUT
-
-      - name: Sort by creation date
-        id: sort
-        run: |
-          TAGS=$(jq -r '.tags[]' <<<"${{ steps.fetch.outputs.tags }}")
-          declare -A created
-          for TAG in $TAGS; do
-            MANIFEST=$(curl -s \
-              -u "${REGISTRY_USERNAME}:${REGISTRY_PASSWORD}" \
-              -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
-              "https://${REGISTRY_HOST}/v2/${SERVICE_NAME}/manifests/${TAG}")
-            TS=$(jq -r '
-              .history[0].v1Compatibility
-              | fromjson
-              | .created
-            ' <<<"$MANIFEST")
-            created[$TAG]=$TS
-          done
-
-          SORTED=( $(
-            for T in "${!created[@]}"; do
-              echo "${created[$T]} $T"
-            done | sort | awk '{print $2}'
-          ) )
-
-          echo "all_sorted=${SORTED[*]}" >> $GITHUB_OUTPUT
-          RECENT=( "${SORTED[@]: -${KEEP_LAST_N}}" )
-          echo "recent_sorted=${RECENT[*]}" >> $GITHUB_OUTPUT
-
-      - name: Display results
-        run: |
-          echo "🔽 All tags (oldest → newest):"
-          printf "  • %s\n" ${{ steps.sort.outputs.all_sorted }}
-          echo
-          echo "🔝 Most recent $KEEP_LAST_N tags:"
-          printf "  • %s\n" ${{ steps.sort.outputs.recent_sorted }}
+    with:
+      version: ${{ github.ref_name }}
+      keep_last_n: 5
 

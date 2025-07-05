@@ -1,4 +1,3 @@
-# .github/workflows/ci.yml
 name: CI Pipeline
 
 on:
@@ -14,3 +13,5 @@ jobs:
   publish-docker:
     needs: build-test
     uses: ./.github/workflows/publish-docker.yaml
+    with:
+      secrets: inherit

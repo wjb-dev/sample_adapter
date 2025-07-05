@@ -3,17 +3,13 @@ name: Publish Docker Image
 on:
   workflow_call:
 env:
-  SERVICE_NAME: haraka-demo  # Adjust this to match your service name
+  SERVICE_NAME: haraka-demo
   REGISTRY_HOST: wjbdev
-  VERSION: 0.1.0
-  DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-  DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     environment: test
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3

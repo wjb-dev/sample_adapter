@@ -135,3 +135,67 @@ jobs:
               "https://hub.docker.com/v2/repositories/$DOCKERHUB_USERNAME/$SERVICE_NAME/tags/$TAG/" \
               || echo "⚠️ Failed to delete $TAG"
           done
+      # —————————————————————————————————————————————
+      #  Append summary to Confluence
+      - name: Append Confluence Cleanup Log
+        if: ${{ steps.compute.outputs.to_prune != '' }}
+        env:
+          BASE_URL: ${{ secrets.CONFLUENCE_BASE_URL }}
+          PAGE_ID: ${{ secrets.CONFLUENCE_PAGE_ID }}
+          USER: ${{ secrets.CONFLUENCE_USERNAME }}
+          TOKEN: ${{ secrets.CONFLUENCE_API_TOKEN }}
+          DELETED: ${{ steps.compute.outputs.to_prune }}
+        run: |
+          TIMESTAMP=$(date --utc +'%Y-%m-%dT%H:%M:%SZ')
+          # Fetch current page version and content
+          resp=$(curl -s -u "$USER:$TOKEN" \
+            "$BASE_URL/rest/api/content/$PAGE_ID?expand=body.storage,version")
+          ver=$(jq '.version.number' <<<"$resp")
+          content=$(jq -r '.body.storage.value' <<<"$resp")
+          
+          # Build new log entry
+          entry="<p><strong>$TIMESTAMP</strong>: deleted tags [${DELETED// /, }]</p>"
+          new_content="$content$entry"
+          
+          # Push updated page (increment version)
+          jq -n --arg id "$PAGE_ID" \
+                --arg title "$(jq -r '.title' <<<"$resp")" \
+                --arg body "$new_content" \
+                --argjson ver $((ver + 1)) \
+            '{
+              id: $id,
+              type: "page",
+              title: $title,
+              version: { number: $ver },
+              body: { storage: { value: $body, representation: "storage" } }
+            }' \
+          | curl -s -u "$USER:$TOKEN" \
+              -H "Content-Type: application/json" \
+              -X PUT "$BASE_URL/rest/api/content/$PAGE_ID" \
+              --data @-
+
+      # —————————————————————————————————————————————
+      #  Send Discord notification
+      - name: Notify Discord
+        if: ${{ steps.compute.outputs.to_prune != '' }}
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DELETED: ${{ steps.compute.outputs.to_prune }}
+        run: |
+          TIMESTAMP=$(date --utc +'%Y-%m-%dT%H:%M:%SZ')
+          # Build a simple embed payload
+          payload=$(
+            jq -nc --arg ts "$TIMESTAMP" --arg tags "$DELETED" '{
+              embeds: [
+                {
+                  title: "Image Pruning Completed",
+                  description: "Deleted tags: " + $tags,
+                  timestamp: $ts,
+                  color: 15158332
+                }
+              ]
+            }'
+          )
+          curl -s -X POST "$WEBHOOK" \
+            -H "Content-Type: application/json" \
+            --data "$payload"

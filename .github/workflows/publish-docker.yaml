@@ -1,11 +1,7 @@
 name: Publish Docker Image
 
 on:
-  workflow_run:
-    workflows:
-      - Test       # This matches the "name:" field in the Test workflow (test.yaml)
-    types:
-      - completed
+  workflow_call:
 
 env:
   SERVICE_NAME: haraka-demo  # Adjust this to match your service name

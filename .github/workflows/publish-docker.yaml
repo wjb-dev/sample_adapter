@@ -16,13 +16,12 @@ on:
       DOCKERHUB_TOKEN:
         required: true
 
-env:
-  SERVICE_NAME: haraka-demo
-  DOCKERHUB_USERNAME: wjbdev
-  REGISTRY: docker.io
-
 jobs:
   build-and-push:
+    env:
+      SERVICE_NAME: haraka-demo
+      DOCKERHUB_USERNAME: wjbdev
+      REGISTRY: docker.io
     name: Build & Push
     runs-on: ubuntu-latest
     outputs:

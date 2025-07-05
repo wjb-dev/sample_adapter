@@ -13,6 +13,4 @@ jobs:
   publish-docker:
     needs: build-test
     uses: ./.github/workflows/publish-docker.yaml
-    with:
-      config-path: .github/labeler.yml
-      secrets: inherit
+    secrets: inherit

@@ -1,3 +1,4 @@
+# .github/workflows/publish-docker.yaml
 name: Publish Docker Image
 
 on:
@@ -48,6 +49,7 @@ jobs:
           tags: |
             ${{ env.REGISTRY_HOST }}/${{ env.SERVICE_NAME }}:${{ github.ref_name || env.VERSION }}
             ${{ env.REGISTRY_HOST }}/${{ env.SERVICE_NAME }}:latest
+
   retention-list:
     name: Retention Policy – List & Sort Tags
     needs: build-and-push
@@ -88,3 +90,50 @@ jobs:
 
           echo "::setOutput name=all::${sorted[*]}"
           echo "::setOutput name=recent::${recent[*]}"
+
+  prune-old-tags:
+    name: Retention Policy – Prune Old Tags
+    needs: retention-list
+    runs-on: ubuntu-latest
+    env:
+      KEEP_LAST_N: ${{ needs.build-and-push.outputs.keep_last_n }}
+      TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      NAMESPACE: ${{ env.DOCKERHUB_USERNAME }}
+      SERVICE: ${{ env.SERVICE_NAME }}
+    steps:
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Re-fetch & sort all tags
+        id: refetch
+        run: |
+          curl -s -u "$NAMESPACE:$TOKEN" \
+            "https://hub.docker.com/v2/repositories/$NAMESPACE/$SERVICE/tags/?page_size=100" \
+            | jq -r '.results[] | "\(.last_updated) \(.name)"' \
+            | sort \
+            | awk '{print $2}' > sorted.txt
+          echo "::setOutput name=all::$(cat sorted.txt)"
+
+      - name: Compute tags to prune
+        id: compute
+        run: |
+          ALL=( $(cat sorted.txt) )
+          TO_PRUNE_COUNT=$(( ${#ALL[@]} - KEEP_LAST_N ))
+          if [ $TO_PRUNE_COUNT -le 0 ]; then
+            echo "No tags to prune."
+            echo "::setOutput name=to_prune::"
+            exit 0
+          fi
+          TO_PRUNE=( "${ALL[@]:0:TO_PRUNE_COUNT}" )
+          echo "Tags to prune: ${TO_PRUNE[*]}"
+          echo "::setOutput name=to_prune::${TO_PRUNE[*]}"
+
+      - name: Delete old tags
+        if: ${{ steps.compute.outputs.to_prune != '' }}
+        run: |
+          for TAG in ${{ steps.compute.outputs.to_prune }}; do
+            echo "Deleting $TAG..."
+            curl -s -X DELETE -u "$NAMESPACE:$TOKEN" \
+              "https://hub.docker.com/v2/repositories/$NAMESPACE/$SERVICE/tags/$TAG/" \
+              || echo "⚠️ Failed to delete $TAG"
+          done

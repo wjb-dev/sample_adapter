@@ -53,8 +53,6 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     env:
-      SERVICE_NAME: ${{ env.SERVICE_NAME }}
-      NAMESPACE: ${{ env.DOCKERHUB_USERNAME }}
       KEEP_LAST_N: ${{ needs.build-and-push.outputs.keep_last_n }}
       TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     steps:
@@ -64,17 +62,15 @@ jobs:
       - name: Fetch all tags from Docker Hub
         id: fetch
         run: |
-          echo "› Fetching tags for $NAMESPACE/$SERVICE_NAME"
-          # Docker Hub API v2 for listing tags
-          curl -s -u "$NAMESPACE:$TOKEN" \
-            "https://hub.docker.com/v2/repositories/$NAMESPACE/$SERVICE_NAME/tags/?page_size=100" \
+          echo "› Fetching tags for $DOCKERHUB_USERNAME/$SERVICE_NAME"
+          curl -s -u "$DOCKERHUB_USERNAME:$TOKEN" \
+            "https://hub.docker.com/v2/repositories/$DOCKERHUB_USERNAME/$SERVICE_NAME/tags/?page_size=100" \
             > all-tags.json
           echo "::set-output name=data::$(jq -c '.results' all-tags.json)"
 
       - name: Sort tags by last_updated
         id: sort
         run: |
-          # each item has .name and .last_updated
           mapfile -t sorted < <(
             jq -r '.[] | "\(.last_updated) \(.name)"' <<<"${{ steps.fetch.outputs.data }}" \
               | sort \
@@ -83,7 +79,6 @@ jobs:
           echo "All tags (oldest→newest):"
           printf " • %s\n" "${sorted[@]}"
 
-          # get the most recent KEEP_LAST_N
           start=$(( ${#sorted[@]} - KEEP_LAST_N ))
           if [ $start -lt 0 ]; then start=0; fi
           recent=( "${sorted[@]:$start}" )
@@ -91,9 +86,5 @@ jobs:
           echo "Most recent $KEEP_LAST_N tags:"
           printf " • %s\n" "${recent[@]}"
 
-          # expose for downstream (if you wanted to delete old ones)
           echo "::set-output name=all::${sorted[*]}"
           echo "::set-output name=recent::${recent[*]}"
-
-      # (you could add a third job here that actually deletes 
-      # anything in all minus recent by calling the delete API)

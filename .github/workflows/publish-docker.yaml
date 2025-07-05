@@ -20,6 +20,7 @@ env:
   SERVICE_NAME: haraka-demo
   DOCKERHUB_USERNAME: wjbdev
   REGISTRY: docker.io
+  REGISTRY_HOST: wjbdev
 
 jobs:
   build-and-push:
@@ -45,9 +46,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:${{ inputs.version }}
-            ${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:latest
-
+            ${{ env.REGISTRY_HOST }}/${{ env.SERVICE_NAME }}:${{ github.ref_name || env.VERSION }}
+            ${{ env.REGISTRY_HOST }}/${{ env.SERVICE_NAME }}:latest
   retention-list:
     name: Retention Policy – List & Sort Tags
     needs: build-and-push

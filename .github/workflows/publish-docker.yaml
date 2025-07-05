@@ -98,7 +98,6 @@ jobs:
     env:
       KEEP_LAST_N: ${{ needs.build-and-push.outputs.keep_last_n }}
       TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-      SERVICE: ${{ env.SERVICE_NAME }}
     steps:
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
